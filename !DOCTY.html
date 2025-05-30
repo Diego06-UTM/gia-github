@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>GreenHome IoT - iOS Cyber</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1A3C34, #0A1F2A);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      animation: neonShift 15s infinite alternate;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.05"><circle cx="50" cy="50" r="2" fill="%2300F5FF"/></svg>') repeat;
+      animation: particleFloat 30s linear infinite;
+    }
+    @keyframes neonShift {
+      0% { background: linear-gradient(135deg, #1A3C34, #0A1F2A); }
+      100% { background: linear-gradient(135deg, #0A1F2A, #2E7D32); }
+    }
+    @keyframes particleFloat {
+      0% { background-position: 0 0; }
+      100% { background-position: 100px 100px; }
+    }
+    #app {
+      width: 100%;
+      max-width: 360px;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0, 245, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .screen {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateX(40px) scale(0.9) rotateY(5deg);
+      transition: opacity 0.6s ease-in-out, transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+    .screen.active {
+      display: flex;
+      opacity: 1;
+      transform: translateX(0) scale(1) rotateY(0);
+    }
+    .header {
+      background: linear-gradient(135deg, rgba(46, 125, 50, 0.8), rgba(0, 245, 255, 0.2));
+      backdrop-filter: blur(15px);
+      padding: 24px;
+      text-align: center;
+      border-bottom: 1px solid rgba(0, 245, 255, 0.3);
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+      display: block;
+      animation: logoCyber 1.5s ease-in-out;
+      transition: transform 0.4s, filter 0.4s;
+    }
+    .logo:active {
+      transform: rotateY(20deg) scale(1.25);
+      filter: drop-shadow(0 0 20px rgba(0, 245, 255, 1));
+    }
+    @keyframes logoCyber {
+      0% { transform: scale(0.5) rotateY(-40deg); opacity: 0; filter: blur(8px); }
+      50% { transform: scale(1.2) rotateY(15deg); filter: blur(0); }
+      100% { transform: scale(1) rotateY(0); opacity: 1; }
+    }
+    .card {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 245, 255, 0.05));
+      border-radius: 24px;
+      padding: 20px;
+      margin: 12px 14px;
+      box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(0, 245, 255, 0.1);
+      border: 1px solid rgba(0, 245, 255, 0.4);
+      transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+    }
+    .card:active {
+      background: rgba(0, 245, 255, 0.15);
+      transform: scale(1.05) translateY(-3px);
+      box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.3), -10px -10px 20px rgba(0, 245, 255, 0.2);
+    }
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 360px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      padding: 16px 0;
+      border-top: 1px solid rgba(0, 245, 255, 0.2);
+      box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.2);
+    }
+    .nav-item {
+      color: #00F5FF;
+      text-align: center;
+      cursor: pointer;
+      padding: 8px;
+      transition: color 0.3s, transform 0.3s, text-shadow 0.3s;
+    }
+    .nav-item:active {
+      color: #FFCA28;
+      transform: scale(1.3) translateY(-4px);
+      text-shadow: 0 0 10px rgba(255, 202, 40, 0.8);
+    }
+    .nav-item.active {
+      color: #DCE775;
+      text-shadow: 0 0 12px rgba(220, 231, 117, 0.6);
+    }
+    .nav-item i {
+      font-size: 32px;
+    }
+    .nav-item span {
+      font-size: 10px;
+      font-weight: 200;
+    }
+    .toggle {
+      background: linear-gradient(145deg, #00F5FF, #2E7D32);
+      border-radius: 26px;
+      width: 52px;
+      height: 28px;
+      position: relative;
+      cursor: pointer;
+      box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2), inset -3px -3px 6px rgba(0, 245, 255, 0.1);
+      transition: background 0.3s;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, background 0.3s;
+    }
+    .toggle.on {
+      background: linear-gradient(145deg, #FFCA28, #00F5FF);
+    }
+    .toggle.on::after {
+      transform: translateX(24px);
+      background: #2E7D32;
+    }
+    .toggle:active {
+      transform: scale(1.12);
+    }
+    .button {
+      background: linear-gradient(145deg, #00F5FF, #DCE775);
+      color: #1A3C34;
+      padding: 12px 16px;
+      border-radius: 16px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -4px -4px 10px rgba(0, 245, 255, 0.2);
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+      width: 96px; /* w-24 */
+    }
+    .button:active {
+      background: linear-gradient(145deg, #FFCA28, #00F5FF);
+      transform: scale(1.06) translateY(-2px);
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(0, 245, 255, 0.3);
+    }
+    .button.active {
+      background: linear-gradient(145deg, #2E7D32, #00F5FF);
+      color: #F5F6F5;
+    }
+    .floating-button {
+      background: linear-gradient(145deg, #00F5FF, #DCE775);
+      color: #1A3C34;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -4px -4px 10px rgba(0, 245, 255, 0.2);
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    .floating-button:active {
+      background: linear-gradient(145deg, #FFCA28, #00F5FF);
+      transform: scale(1.06) translateY(-2px);
+      box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), -6px -6px 12px rgba(0, 245, 255, 0.3);
+    }
+    #energyChart {
+      max-height: 200px;
+      filter: drop-shadow(0 4px 10px rgba(0, 245, 255, 0.3));
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 245, 255, 0.05));
+      border-radius: 24px;
+      padding: 28px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.3), -8px -8px 20px rgba(0, 245, 255, 0.2);
+      border: 1px solid rgba(0, 245, 255, 0.4);
+      transform: translateY(30px);
+      animation: modalGlitch 0.5s ease-out forwards;
+    }
+    @keyframes modalGlitch {
+      0% { transform: translateY(30px) skew(5deg); opacity: 0.5; }
+      50% { transform: translateY(-10px) skew(-2deg); opacity: 0.8; }
+      100% { transform: translateY(0) skew(0); opacity: 1; }
+    }
+    .modal-content input, .modal-content select {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid rgba(0, 245, 255, 0.5);
+      border-radius: 12px;
+      font-family: 'Poppins', sans-serif;
+      background: rgba(255, 255, 255, 0.1);
+      color: #F5F6F5;
+    }
+    .content-container {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px; /* Espacio para evitar que el contenido tope con la nav-bar */
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Pantalla: Inicio -->
+    <div id="home" class="screen active">
+      <div class="header">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#00F5FF" stroke-width="3"/>
+            <rect x="40" y="30" width="40" height="60" fill="#2E7D32" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 25 A10 10 0 0 1 75 25" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 85 A10 10 0 0 0 75 85" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <polygon points="50,10 70,10 70,30 50,30" fill="#DCE775"/>
+            <polygon points="50,90 70,90 70,70 50,70" fill="#DCE775"/>
+            <text x="60" y="65" font-family="Poppins, sans-serif" font-weight="800" font-size="12" fill="#00F5FF" text-anchor="middle">GreenHome IoT</text>
+          </svg>
+        </div>
+      </div>
+      <div class="content-container">
+        <div class="card">
+          <div class="flex items-center">
+            <span class="material-icons text-green-800 text-5xl mr-4">pie_chart</span>
+            <div>
+              <h2 class="text-lg font-semibold text-gray-100">Consumo este mes</h2>
+              <p class="text-2xl font-extrabold text-gray-100" id="total-consumption">0 kWh</p>
+            </div>
+          </div>
+        </div>
+        <div id="device-list-home"></div>
+      </div>
+    </div>
+    <!-- Pantalla: Dispositivos -->
+    <div id="devices" class="screen">
+      <div class="header">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#00F5FF" stroke-width="3"/>
+            <rect x="40" y="30" width="40" height="60" fill="#2E7D32" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 25 A10 10 0 0 1 75 25" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 85 A10 10 0 0 0 75 85" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <polygon points="50,10 70,10 70,30 50,30" fill="#DCE775"/>
+            <polygon points="50,90 70,90 70,70 50,70" fill="#DCE775"/>
+            <text x="60" y="65" font-family="Poppins, sans-serif" font-weight="800" font-size="12" fill="#00F5FF" text-anchor="middle">GreenHome IoT</text>
+          </svg>
+        </div>
+        <h1 class="text-xl font-extrabold text-gray-100 mt-2">Dispositivos</h1>
+      </div>
+      <div class="content-container" id="device-list"></div>
+      <div class="fixed bottom-24 right-6">
+        <div class="floating-button" onclick="openAddDeviceModal()">
+          <span class="material-icons text-3xl">add</span>
+        </div>
+      </div>
+    </div>
+    <!-- Pantalla: Reportes -->
+    <div id="reports" class="screen">
+      <div class="header">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#00F5FF" stroke-width="3"/>
+            <rect x="40" y="30" width="40" height="60" fill="#2E7D32" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 25 A10 10 0 0 1 75 25" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 85 A10 10 0 0 0 75 85" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <polygon points="50,10 70,10 70,30 50,30" fill="#DCE775"/>
+            <polygon points="50,90 70,90 70,70 50,70" fill="#DCE775"/>
+            <text x="60" y="65" font-family="Poppins, sans-serif" font-weight="800" font-size="12" fill="#00F5FF" text-anchor="middle">GreenHome IoT</text>
+          </svg>
+        </div>
+        <h1 class="text-xl font-extrabold text-gray-100 mt-2">Reportes Energéticos</h1>
+      </div>
+      <div class="content-container">
+        <div class="card">
+          <canvas id="energyChart"></canvas>
+          <div class="mt-4 space-y-2" id="consumption-details"></div>
+        </div>
+        <div class="flex justify-around mx-5">
+          <div class="button text-sm" onclick="updateChart('day')">Día</div>
+          <div class="button text-sm active" onclick="updateChart('week')">Semana</div>
+          <div class="button text-sm" onclick="updateChart('month')">Mes</div>
+        </div>
+      </div>
+    </div>
+    <!-- Pantalla: Configuración -->
+    <div id="settings" class="screen">
+      <div class="header">
+        <div class="logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#00F5FF" stroke-width="3"/>
+            <rect x="40" y="30" width="40" height="60" fill="#2E7D32" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 25 A10 10 0 0 1 75 25" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <path d="M45 85 A10 10 0 0 0 75 85" fill="none" stroke="#00F5FF" stroke-width="2"/>
+            <polygon points="50,10 70,10 70,30 50,30" fill="#DCE775"/>
+            <polygon points="50,90 70,90 70,70 50,70" fill="#DCE775"/>
+            <text x="60" y="65" font-family="Poppins, sans-serif" font-weight="800" font-size="12" fill="#00F5FF" text-anchor="middle">GreenHome IoT</text>
+          </svg>
+        </div>
+        <h1 class="text-xl font-extrabold text-gray-100 mt-2">Configuración</h1>
+      </div>
+      <div class="content-container">
+        <div class="card flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="material-icons text-green-800 text-4xl mr-4">assistant</span>
+            <p class="text-base font-medium text-gray-100">Conectar con Alexa</p>
+          </div>
+          <div class="toggle" id="alexa-toggle" onclick="toggleAssistant('alexa')"></div>
+        </div>
+        <div class="card flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="material-icons text-green-800 text-4xl mr-4">notifications</span>
+            <p class="text-base font-medium text-gray-100">Notificaciones</p>
+          </div>
+          <div class="toggle on" id="notifications-toggle" onclick="toggleNotifications()"></div>
+        </div>
+        <div class="card">
+          <div class="button" onclick="saveSettings()">Guardar</div>
+        </div>
+      </div>
+    </div>
+    <!-- Barra de Navegación -->
+    <div class="nav-bar">
+      <div class="nav-item active" onclick="switchScreen('home')">
+        <span class="material-icons">home</span>
+        <span>Inicio</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('devices')">
+        <span class="material-icons">devices</span>
+        <span>Dispositivos</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('reports')">
+        <span class="material-icons">bar_chart</span>
+        <span>Reportes</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('settings')">
+        <span class="material-icons">settings</span>
+        <span>Configuración</span>
+      </div>
+    </div>
+    <!-- Modal para Añadir Dispositivo -->
+    <div id="add-device-modal" class="modal">
+      <div class="modal-content">
+        <h2 class="text-lg font-semibold text-gray-100">Añadir Dispositivo</h2>
+        <input type="text" id="device-name" placeholder="Nombre del dispositivo">
+        <select id="device-type">
+          <option value="lightbulb">Luces</option>
+          <option value="thermostat">Termostato</option>
+          <option value="power">Enchufe</option>
+        </select>
+        <div class="flex justify-around mt-4">
+          <div class="button text-sm" onclick="addDevice()">Añadir</div>
+          <div class="button text-sm" onclick="closeAddDeviceModal()">Cancelar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Estado inicial
+    let devices = JSON.parse(localStorage.getItem('devices')) || [
+      { id: 1, name: 'Luces Sala', type: 'lightbulb', state: false, consumption: 120 },
+      { id: 2, name: 'Termostato', type: 'thermostat', state: true, consumption: 80 },
+      { id: 3, name: 'Luces Cocina', type: 'lightbulb', state: false, consumption: 100 },
+      { id: 4, name: 'Calefacción', type: 'thermostat', state: true, consumption: 60 },
+      { id: 5, name: 'Enchufes', type: 'power', state: false, consumption: 45 }
+    ];
+    let settings = JSON.parse(localStorage.getItem('settings')) || {
+      alexa: false,
+      notifications: true
+    };
+
+    // Actualizar listas de dispositivos
+    function updateDeviceLists() {
+      const homeList = document.getElementById('device-list-home');
+      const deviceList = document.getElementById('device-list');
+      homeList.innerHTML = '';
+      deviceList.innerHTML = '';
+      let totalConsumption = 0;
+      devices.forEach((device, index) => {
+        totalConsumption += device.state ? device.consumption : 0;
+        const deviceHtml = `
+          <div class="card flex items-center justify-between">
+            <div class="flex items-center">
+              <span class="material-icons text-green-800 text-4xl mr-4">${device.type}</span>
+              <p class="text-base font-medium text-gray-100">${device.name}</p>
+            </div>
+            <div class="toggle ${device.state ? 'on' : ''}" onclick="toggleDevice(${device.id})"></div>
+          </div>
+        `;
+        if (index < 2) {
+          homeList.insertAdjacentHTML('beforeend', deviceHtml);
+        }
+        deviceList.insertAdjacentHTML('beforeend', deviceHtml);
+      });
+      document.getElementById('total-consumption').textContent = `${totalConsumption} kWh`;
+    }
+
+    // Cambiar estado de dispositivo
+    function toggleDevice(id) {
+      devices = devices.map(device => 
+        device.id === id ? { ...device, state: !device.state } : device
+      );
+      localStorage.setItem('devices', JSON.stringify(devices));
+      updateDeviceLists();
+      if (document.getElementById('reports').classList.contains('active')) {
+        initChart();
+      }
+    }
+
+    // Añadir nuevo dispositivo
+    function addDevice() {
+      const name = document.getElementById('device-name').value;
+      const type = document.getElementById('device-type').value;
+      if (name) {
+        devices.push({
+          id: devices.length + 1,
+          name,
+          type,
+          state: false,
+          consumption: Math.floor(Math.random() * 50) + 50
+        });
+        localStorage.setItem('devices', JSON.stringify(devices));
+        updateDeviceLists();
+        closeAddDeviceModal();
+      }
+    }
+
+    // Modal para añadir dispositivo
+    function openAddDeviceModal() {
+      document.getElementById('add-device-modal').style.display = 'flex';
+    }
+    function closeAddDeviceModal() {
+      document.getElementById('add-device-modal').style.display = 'none';
+      document.getElementById('device-name').value = '';
+    }
+
+    // Configuración
+    function toggleAssistant(type) {
+      settings[type] = !settings[type];
+      document.getElementById(`${type}-toggle`).classList.toggle('on');
+    }
+    function toggleNotifications() {
+      settings.notifications = !settings.notifications;
+      document.getElementById('notifications-toggle').classList.toggle('on');
+    }
+    function saveSettings() {
+      localStorage.setItem('settings', JSON.stringify(settings));
+      alert('Configuración guardada');
+    }
+
+    // Cambiar pantallas
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      const targetScreen = document.getElementById(screenId);
+      targetScreen.classList.add('active');
+      document.querySelector(`[onclick="switchScreen('${screenId}')"]`).classList.add('active');
+      if (screenId === 'reports') {
+        initChart();
+      }
+      updateDeviceLists();
+    }
+
+    // Gráfico de consumo
+    let chartInstance = null;
+    function initChart(period = 'week') {
+      const ctx = document.getElementById('energyChart').getContext('2d');
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      const data = {
+        day: devices.map(d => d.state ? d.consumption * 0.1 : 0),
+        week: devices.map(d => d.state ? d.consumption * 0.5 : 0),
+        month: devices.map(d => d.state ? d.consumption : 0)
+      };
+      const labels = devices.map(d => d.name);
+      chartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data: data[period],
+            backgroundColor: ['#2E7D32', '#DCE775', '#FFCA28', '#00F5FF', '#C8E6C9'],
+            borderColor: 'rgba(0, 245, 255, 0.5)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 1500,
+            easing: 'easeInOutQuart',
+            animateScale: true,
+            animateRotate: true
+          },
+          plugins: {
+            tooltip: {
+              backgroundColor: 'rgba(0, 245, 255, 0.9)',
+              borderRadius: 14,
+              padding: 14,
+              bodyFont: { family: 'Poppins', size: 14 },
+              titleFont: { family: 'Poppins', size: 16, weight: 800 }
+            }
+          }
+        }
+      });
+      const details = document.getElementById('consumption-details');
+      details.innerHTML = devices.map((d, i) => `
+        <p class="text-sm font-semibold text-gray-100">${d.name}: ${data[period][i].toFixed(1)} kWh</p>
+      `).join('');
+    }
+
+    function updateChart(period) {
+      document.querySelectorAll('.button').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      initChart(period);
+    }
+
+    // Inicializar
+    console.log('DOM cargado, verificando logo...');
+    updateDeviceLists();
+    document.getElementById('alexa-toggle').classList.toggle('on', settings.alexa);
+    document.getElementById('notifications-toggle').classList.toggle('on', settings.notifications);
+    if (document.getElementById('reports').classList.contains('active')) {
+      initChart();
+    }
+
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+          .then(registration => {
+            console.log('Service Worker registrado con éxito:', registration.scope);
+          })
+          .catch(error => {
+            console.error('Error al registrar Service Worker:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
